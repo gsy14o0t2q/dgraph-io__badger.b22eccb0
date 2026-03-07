@@ -356,7 +356,7 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 		return Manifest{}, 0, errBadMagic
 	}
 	version := y.BytesToU32(magicBuf[4:8])
-	if version < magicVersion {
+	if version != magicVersion {
 		return Manifest{}, 0,
 			//nolint:lll
 			fmt.Errorf("manifest has unsupported version: %d (we support %d).\n"+
@@ -373,6 +373,7 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 	build := createManifest()
 	var offset int64
 	for {
+		offset = r.count
 		var lenCrcBuf [8]byte
 		_, err := io.ReadFull(&r, lenCrcBuf[:])
 		if err != nil {
@@ -381,10 +382,9 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 			}
 			return Manifest{}, 0, err
 		}
-		offset = r.count
 		length := y.BytesToU32(lenCrcBuf[0:4])
 		// Sanity check to ensure we don't over-allocate memory.
-		if length >= uint32(stat.Size()) {
+		if length > uint32(stat.Size()) {
 			return Manifest{}, 0, errors.Errorf(
 				"Buffer length: %d greater than file size: %d. Manifest file might be corrupted",
 				length, stat.Size())
@@ -396,7 +396,7 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 			}
 			return Manifest{}, 0, err
 		}
-		if crc32.Checksum(buf, crc32.MakeTable(crc32.IEEE)) != y.BytesToU32(lenCrcBuf[4:8]) {
+		if crc32.Checksum(buf, y.CastagnoliCrcTable) != y.BytesToU32(lenCrcBuf[4:8]) {
 			return Manifest{}, 0, errBadChecksum
 		}
 
