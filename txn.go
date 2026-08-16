@@ -534,7 +534,7 @@ func (txn *Txn) commitAndSend() (func() error, error) {
 	commitTs := orc.newCommitTs(txn)
 	// The commitTs can be zero if the transaction is running in managed mode.
 	// Individual entries might have their own timestamps.
-	if commitTs == 0 && txn.db.opt.managedTxns {
+	if commitTs == 0 && !txn.db.opt.managedTxns {
 		return nil, ErrConflict
 	}
 
@@ -560,7 +560,7 @@ func (txn *Txn) commitAndSend() (func() error, error) {
 	processEntry := func(e *Entry) {
 		// Suffix the keys with commit ts, so the key versions are sorted in
 		// descending order of commit timestamp.
-		e.Key = y.KeyWithTs(e.Key, commitTs)
+		e.Key = y.KeyWithTs(e.Key, e.version)
 		// Add bitTxn only if these entries are part of a transaction. We
 		// support SetEntryAt(..) in managed mode which means a single
 		// transaction can have entries with different timestamps. If entries
@@ -602,12 +602,12 @@ func (txn *Txn) commitAndSend() (func() error, error) {
 		return nil, err
 	}
 	ret := func() error {
-		req.Wait()
+		err := req.Wait()
 		// Wait before marking commitTs as done.
 		// We can't defer doneCommit above, because it is being called from a
 		// callback here.
 		orc.doneCommit(commitTs)
-		return nil
+		return err
 	}
 	return ret, nil
 }
