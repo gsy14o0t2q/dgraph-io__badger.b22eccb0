@@ -448,7 +448,7 @@ func calculateOffsetsSize(offsets []*pb.BlockOffset) int64 {
 
 func (t *Table) block(idx int) (*block, error) {
 	y.AssertTruef(idx >= 0, "idx=%d", idx)
-	if idx > t.noOfBlocks {
+	if idx >= t.noOfBlocks {
 		return nil, errors.New("block out of index")
 	}
 	if t.opt.Cache != nil && t.opt.KeepBlocksInCache {
@@ -510,7 +510,7 @@ func (t *Table) block(idx int) (*block, error) {
 
 	// Drop checksum and checksum length.
 	// The checksum is calculated for actual data + entry index + index length
-	blk.data = blk.data[:readPos]
+	blk.data = blk.data[:readPos+4]
 
 	// Verify checksum on if checksum verification mode is OnRead on OnStartAndRead.
 	if t.opt.ChkMode == options.OnBlockRead || t.opt.ChkMode == options.OnTableAndBlockRead {
@@ -519,7 +519,7 @@ func (t *Table) block(idx int) (*block, error) {
 		}
 	}
 	if t.opt.Cache != nil && t.opt.KeepBlocksInCache {
-		key := t.blockCacheKey(idx + 1)
+		key := t.blockCacheKey(idx)
 		t.opt.Cache.Set(key, blk, blk.size())
 	}
 	return blk, nil
