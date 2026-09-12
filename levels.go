@@ -522,7 +522,7 @@ nextTable:
 	for _, table := range botTables {
 		if len(cd.dropPrefixes) > 0 {
 			for _, prefix := range cd.dropPrefixes {
-				if bytes.HasPrefix(table.Smallest(), prefix) ||
+				if bytes.HasPrefix(table.Smallest(), prefix) &&
 					bytes.HasPrefix(table.Biggest(), prefix) {
 					// All the keys in this table have the dropPrefix. So, this
 					// table does not need to be in the iterator and can be
@@ -594,6 +594,7 @@ nextTable:
 					break
 				}
 				lastKey = y.SafeCopy(lastKey, it.Key())
+				numVersions = 0
 			}
 
 			vs := it.Value()
@@ -623,7 +624,7 @@ nextTable:
 					switch {
 					// Add the key to the table only if it has not expired.
 					// We don't want to add the deleted/expired keys.
-					case !isExpired || lastValidVersion:
+					case !isExpired && lastValidVersion:
 						// Add this key. We have set skipKey, so the following key versions
 						// would be skipped.
 					case hasOverlap:
@@ -712,7 +713,7 @@ nextTable:
 	}
 
 	sort.Slice(newTables, func(i, j int) bool {
-		return y.CompareKeys(newTables[i].Biggest(), newTables[j].Biggest()) > 0
+		return y.CompareKeys(newTables[i].Biggest(), newTables[j].Biggest()) < 0
 	})
 	s.kv.vlog.updateDiscardStats(discardStats)
 	s.kv.opt.Debugf("Discard stats: %v", discardStats)
