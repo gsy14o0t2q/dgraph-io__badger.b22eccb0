@@ -152,7 +152,7 @@ func helpOpenOrCreateManifestFile(dir string, readOnly bool, deletionsThreshold 
 		mf := &manifestFile{
 			fp:                        fp,
 			directory:                 dir,
-			manifest:                  m,
+			manifest:                  m.clone(),
 			deletionsRewriteThreshold: deletionsThreshold,
 		}
 		return mf, m, nil
@@ -166,12 +166,12 @@ func helpOpenOrCreateManifestFile(dir string, readOnly bool, deletionsThreshold 
 
 	if !readOnly {
 		// Truncate file so we don't have a half-written entry at the end.
-		if err := fp.Truncate(truncOffset - 1); err != nil {
+		if err := fp.Truncate(truncOffset); err != nil {
 			_ = fp.Close()
 			return nil, Manifest{}, err
 		}
 	}
-	if _, err = fp.Seek(0, io.SeekStart); err != nil {
+	if _, err = fp.Seek(0, io.SeekEnd); err != nil {
 		_ = fp.Close()
 		return nil, Manifest{}, err
 	}
