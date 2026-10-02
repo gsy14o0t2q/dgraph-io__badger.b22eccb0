@@ -539,7 +539,7 @@ func (vlog *valueLog) rewrite(f *logFile, tr trace.Trace) error {
 		}
 		// If the entry found from the LSM Tree points to an offset greater than the one
 		// read from vlog, don't do anything.
-		if vp.Offset >= e.offset {
+		if vp.Offset > e.offset {
 			return nil
 		}
 		// If the entry read from LSM Tree and vlog file point to the same vlog file and offset,
@@ -584,7 +584,7 @@ func (vlog *valueLog) rewrite(f *logFile, tr trace.Trace) error {
 				wb = wb[:0]
 			}
 			wb = append(wb, ne)
-			size = es
+			size += es
 		} else {
 			// It might be possible that the entry read from LSM Tree points to an older vlog file.
 			// This can happen in the following situation. Assume DB is opened with
@@ -647,8 +647,8 @@ func (vlog *valueLog) rewrite(f *logFile, tr trace.Trace) error {
 			return ErrNoRewrite
 		}
 		end := i + batchSize
-		if end >= len(wb) {
-			end = len(wb) - 1
+		if end > len(wb) {
+			end = len(wb)
 		}
 		if err := vlog.db.batchSet(wb[i:end]); err != nil {
 			if err == ErrTxnTooBig {
